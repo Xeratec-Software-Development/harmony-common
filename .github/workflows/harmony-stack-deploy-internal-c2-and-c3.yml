@@ -114,11 +114,14 @@ jobs:
       run: |
         echo "📦 Packaging build artifacts for deployment..."
 
+        # Use GitHub workspace directory
+        mkdir -p "${{ github.workspace }}/deploy-staging"
+
         # Copy dynamic-discovery-client JAR excluding *-sources.jar
-        find dynamic-discovery-client/dynamic-discovery-client/target/ -type f -name "dynamic-discovery-client-*.jar" ! -name "*-sources.jar" -exec cp {} "${{ github.workspace }}/test-deploy/" \;
+        find dynamic-discovery-client/dynamic-discovery-client/target/ -type f -name "dynamic-discovery-client-*.jar" ! -name "*-sources.jar" -exec cp {} "${{ github.workspace }}/deploy-staging/" \;
 
         # Copy harmony-MSH JAR excluding *-sources.jar
-        find harmony-access-point/Core/Domibus-MSH/target/ -type f -name "harmony-MSH-*.jar" ! -name "*-sources.jar" -exec cp {} "${{ github.workspace }}/test-deploy/" \;
+        find harmony-access-point/Core/Domibus-MSH/target/ -type f -name "harmony-MSH-*.jar" ! -name "*-sources.jar" -exec cp {} "${{ github.workspace }}/deploy-staging/" \;
 
         # SSH Key for C2
     - name: Copy JARs to C2
@@ -130,7 +133,7 @@ jobs:
         ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "mkdir -p /home/harmony_admin/test-deploy"
 
         # Copy JARs to C2
-        scp -i c2_key.pem -o StrictHostKeyChecking=no "${{ github.workspace }}/test-deploy/"* ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }}:/home/harmony_admin/test-deploy/
+        scp -i c2_key.pem -o StrictHostKeyChecking=no "${{ github.workspace }}/deploy-staging/"* ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }}:/home/harmony_admin/test-deploy/
 
         # Clean up SSH key
         rm -f c2_key.pem
@@ -145,7 +148,7 @@ jobs:
         ssh -i c3_key.pem -o StrictHostKeyChecking=no ${{ secrets.C3_VM_USER }}@${{ secrets.C3_VM_HOST }} "mkdir -p /home/harmony_admin/test-deploy"
 
         # Copy JARs to C3
-        scp -i c3_key.pem -o StrictHostKeyChecking=no "${{ github.workspace }}/test-deploy/"* ${{ secrets.C3_VM_USER }}@${{ secrets.C3_VM_HOST }}:/home/harmony_admin/test-deploy/
+        scp -i c3_key.pem -o StrictHostKeyChecking=no "${{ github.workspace }}/deploy-staging/"* ${{ secrets.C3_VM_USER }}@${{ secrets.C3_VM_HOST }}:/home/harmony_admin/test-deploy/
 
         # Clean up SSH key
         rm -f c3_key.pem
