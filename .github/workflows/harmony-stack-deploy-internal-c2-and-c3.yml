@@ -102,13 +102,38 @@ jobs:
         cd dynamic-discovery-client
         ./mvnw clean install -Dmaven.test.skip=true
 
-    # ----------- Placeholder for File Transfer ----------- #
-    - name: Package Build Artifacts (Placeholder)
+    # ----------- Transfer Build Artifacts to C2 and C3 ----------- #
+    - name: Copy Build Artifacts to C2 and C3
       run: |
         echo "📦 Packaging build artifacts for deployment..."
-        ls dynamic-discovery-client/dynamic-discovery-client/target/dynamic-discovery-client-*.jar
-        ls harmony-access-point/Core/Domibus-MSH/target/harmony-MSH-*.jar
-        # Example: tar -czf build-output.tar.gz /path/to/build/output
+
+        # Use GitHub workspace directory
+        mkdir -p "${{ github.workspace }}/test-deploy"
+
+        # Copy dynamic-discovery-client JAR excluding *-sources.jar
+        find dynamic-discovery-client/dynamic-discovery-client/target/ -type f -name "dynamic-discovery-client-*.jar" ! -name "*-sources.jar" -exec cp {} "${{ github.workspace }}/test-deploy/" \;
+
+        # Copy harmony-MSH JAR excluding *-sources.jar
+        find harmony-access-point/Core/Domibus-MSH/target/ -type f -name "harmony-MSH-*.jar" ! -name "*-sources.jar" -exec cp {} "${{ github.workspace }}/test-deploy/" \;
+
+        ls "${{ github.workspace }}/test-deploy/"
+
+        # SSH Key for C2
+        echo "${{ secrets.C2_VM_SSH_KEY }}" > c2_key.pem
+        chmod 600 c2_key.pem
+
+        # Copy JARs to C2
+        scp -i c2_key.pem "${{ github.workspace }}/test-deploy/"* ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }}:/home/harmony_admin/test-deploy/
+
+        # SSH Key for C3
+        echo "${{ secrets.C3_VM_SSH_KEY }}" > c3_key.pem
+        chmod 600 c3_key.pem
+
+        # Copy JARs to C3
+        scp -i c3_key.pem "${{ github.workspace }}/test-deploy/"* ${{ secrets.C3_VM_USER }}@${{ secrets.C3_VM_HOST }}:/home/harmony_admin/test-deploy/
+
+        # Clean up private keys
+        rm -f c2_key.pem c3_key.pem
 
     - name: Notify Build Success
       run: echo "✅ Build completed successfully. Ready for deployment to C2 and C3."
