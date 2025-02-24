@@ -1,0 +1,114 @@
+name: Build and Deploy Harmony Stack
+
+on:
+  push:
+    branches:
+      - harmony-xeratec-internal-c2-and-c3
+  workflow_dispatch:
+    inputs:
+      harmony-common-branch:
+        description: 'Branch for harmony-common'
+        required: true
+        default: 'harmony-xeratec-internal-c2-and-c3'
+      harmony-access-point-branch:
+        description: 'Branch for harmony-access-point'
+        required: true
+        default: 'harmony-main-xeratec'  
+      harmony-smp-branch:
+        description: 'Branch for harmony-smp'
+        required: true
+        default: 'harmony-main-xeratec'
+      dynamic-discovery-client-branch:
+        description: 'Branch for dynamic-discovery-client'
+        required: true
+        default: 'harmony-main-xeratec'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-20.04 
+
+    strategy:
+      matrix:
+        architecture: [amd64] 
+
+    environment: internal
+
+    env:
+      C2_VM_HOST: ${{ secrets.C2_VM_HOST }}
+      C2_VM_USER: ${{ secrets.C2_VM_USER }}
+      C3_VM_HOST: ${{ secrets.C3_VM_HOST }}
+      C3_VM_USER: ${{ secrets.C3_VM_USER }}
+
+    steps:
+    # ----------- Set Up Java 8 ----------- #
+    - name: Set up JDK 8
+      uses: actions/setup-java@v3
+      with:
+        java-version: '8'
+        distribution: 'temurin'
+
+    - name: Verify Java Version
+      run: java -version
+
+    - name: Install Build Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential devscripts debhelper
+
+    # ----------- Clone All Repositories ----------- #
+    - name: Checkout harmony-access-point
+      uses: actions/checkout@v3
+      with:
+        repository: Xeratec-Software-Development/harmony-access-point
+        ref: ${{ github.event.inputs.harmony-access-point-branch }}
+        path: harmony-access-point
+
+    - name: Checkout harmony-common
+      uses: actions/checkout@v3
+      with:
+        repository: Xeratec-Software-Development/harmony-common
+        ref: ${{ github.event.inputs.harmony-common-branch }}
+        path: harmony-common
+
+    - name: Checkout harmony-smp
+      uses: actions/checkout@v3
+      with:
+        repository: Xeratec-Software-Development/harmony-smp
+        ref: ${{ github.event.inputs.harmony-smp-branch }}
+        path: harmony-smp
+
+    - name: Checkout dynamic-discovery-client
+      uses: actions/checkout@v3
+      with:
+        repository: Xeratec-Software-Development/dynamic-discovery-client
+        ref: ${{ github.event.inputs.dynamic-discovery-client-branch }}
+        path: dynamic-discovery-client
+
+    # ----------- Run Scripts in harmony-common ----------- #
+    - name: Run prepare_buildhost.sh (sudo)
+      run: |
+        cd harmony-common
+        chmod +x prepare_buildhost.sh
+        sudo ./prepare_buildhost.sh
+
+    - name: Run build_packages.sh -s (skip tests)
+      run: |
+        cd harmony-common
+        chmod +x build_packages.sh
+        ./build_packages.sh -s
+
+    - name: Build dynamic-discovery-client (skip tests)
+      run: |
+        cd dynamic-discovery-client
+        ./mvnw clean install -Dmaven.test.skip=true
+
+    # ----------- Placeholder for File Transfer ----------- #
+    - name: Package Build Artifacts (Placeholder)
+      run: |
+        echo "📦 Packaging build artifacts for deployment..."
+        ls dynamic-discovery-client/dynamic-discovery-client/target/dynamic-discovery-client-*.jar
+        ls harmony-access-point/Core/Domibus-MSH/target/harmony-MSH-*.jar
+        # Example: tar -czf build-output.tar.gz /path/to/build/output
+
+    - name: Notify Build Success
+      run: echo "✅ Build completed successfully. Ready for deployment to C2 and C3."
