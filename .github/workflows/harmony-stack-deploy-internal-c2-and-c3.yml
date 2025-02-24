@@ -104,9 +104,10 @@ jobs:
 
     - name: get host key
       run: |
+       mkdir -p ~/.ssh  # ✅ Ensure .ssh directory exists
         ssh-keyscan -H ${{ secrets.C2_VM_HOST }} >> ~/.ssh/known_hosts
         ssh-keyscan -H ${{ secrets.C3_VM_HOST }} >> ~/.ssh/known_hosts
-
+        chmod 600 ~/.ssh/known_hosts  
 
     # ----------- Transfer Build Artifacts to C2 and C3 ----------- #
     - name: Copy Build Artifacts to C2 and C3
