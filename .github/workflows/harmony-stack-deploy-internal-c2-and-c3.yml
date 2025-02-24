@@ -102,9 +102,9 @@ jobs:
         cd dynamic-discovery-client
         ./mvnw clean install -Dmaven.test.skip=true
 
-    - name: get host key
+    - name: get host keys
       run: |
-       mkdir -p ~/.ssh  # ✅ Ensure .ssh directory exists
+        mkdir -p ~/.ssh  # ✅ Ensure .ssh directory exists
         ssh-keyscan -H ${{ secrets.C2_VM_HOST }} >> ~/.ssh/known_hosts
         ssh-keyscan -H ${{ secrets.C3_VM_HOST }} >> ~/.ssh/known_hosts
         chmod 600 ~/.ssh/known_hosts  
@@ -126,21 +126,34 @@ jobs:
         ls "${{ github.workspace }}/test-deploy/"
 
         # SSH Key for C2
+    - name: Copy JARs to C2
+      run: |
         echo "${{ secrets.C2_VM_SSH_KEY }}" > c2_key.pem
         chmod 600 c2_key.pem
 
-        # Copy JARs to C2
-        scp -i c2_key.pem "${{ github.workspace }}/test-deploy/"* ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }}:/home/harmony_admin/test-deploy/
+        # Create directory on C2
+        ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "mkdir -p /home/harmony_admin/test-deploy"
 
-        # SSH Key for C3
+        # Copy JARs to C2
+        scp -i c2_key.pem -o StrictHostKeyChecking=no "${{ github.workspace }}/test-deploy/"* ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }}:/home/harmony_admin/test-deploy/
+
+        # Clean up SSH key
+        rm -f c2_key.pem
+
+    # SSH Key for C3
+    - name: Copy JARs to C3
+      run: |
         echo "${{ secrets.C3_VM_SSH_KEY }}" > c3_key.pem
         chmod 600 c3_key.pem
 
-        # Copy JARs to C3
-        scp -i c3_key.pem "${{ github.workspace }}/test-deploy/"* ${{ secrets.C3_VM_USER }}@${{ secrets.C3_VM_HOST }}:/home/harmony_admin/test-deploy/
+        # Create directory on C3
+        ssh -i c3_key.pem -o StrictHostKeyChecking=no ${{ secrets.C3_VM_USER }}@${{ secrets.C3_VM_HOST }} "mkdir -p /home/harmony_admin/test-deploy"
 
-        # Clean up private keys
-        rm -f c2_key.pem c3_key.pem
+        # Copy JARs to C3
+        scp -i c3_key.pem -o StrictHostKeyChecking=no "${{ github.workspace }}/test-deploy/"* ${{ secrets.C3_VM_USER }}@${{ secrets.C3_VM_HOST }}:/home/harmony_admin/test-deploy/
+
+        # Clean up SSH key
+        rm -f c3_key.pem
 
     - name: Notify Build Success
       run: echo "✅ Build completed successfully. Ready for deployment to C2 and C3."
