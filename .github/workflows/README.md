@@ -27,7 +27,7 @@ Branch names for the following repositories:
 
 Assumed:
 
-- C2 and C3 have are fully installed and configured with the harmony-ap service running
+- C2 and C3 have been fully installed and configured with the harmony-ap service running
 - harmony-ap is installed in /opt/harmony-ap
 - harmony-ap is running as a systemd service
 
