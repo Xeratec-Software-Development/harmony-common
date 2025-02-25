@@ -1,4 +1,4 @@
-# C2 and C3 deploy workflow for dynamic-discover-client and harmony-MSH artifacts
+# C2 and C3 deploy workflow for dynamic-discovery-client and harmony-MSH artifacts
 
 This workflow is used to build the C2 and C3 versions of the Harmony application.
 

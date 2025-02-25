@@ -124,33 +124,25 @@ jobs:
         find harmony-access-point/Core/Domibus-MSH/target/ -type f -name "harmony-MSH-*.jar" ! -name "*-sources.jar" -exec cp {} "${{ github.workspace }}/deploy-staging/" \;
 
         # SSH Key for C2
+    # SSH Key for C2
     - name: Copy JARs to C2
       run: |
         echo "${{ secrets.C2_VM_SSH_KEY }}" > c2_key.pem
         chmod 600 c2_key.pem
 
-        # Create directory on C2
-        # ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "mkdir -p /tmp/deploy-staging"
+        # ✅ Create /tmp/deploy-staging on C2
+        ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "mkdir -p /tmp/deploy-staging"
 
-        # Copy JARs to C2
+        # 📁 Copy JARs to C2
         scp -i c2_key.pem -o StrictHostKeyChecking=no "${{ github.workspace }}/deploy-staging/"* ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }}:/tmp/deploy-staging/
 
-        # Move JARs to the target directory with sudo
+        # ✅ Move JARs and restart service
         ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "sudo mv /tmp/deploy-staging/* /opt/harmony-ap/webapps/ROOT/WEB-INF/lib/ && sudo systemctl restart harmony-ap"
 
-        # Check if the move was successful
-        ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "if [ $? -eq 0 ]; then echo '✅ JARs moved successfully to C2'; else echo '❌ Failed to move JARs to C2'; exit 1; fi"
-
-        # Check if the restart was successful
-        ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "if [ $? -eq 0 ]; then echo '✅ C2 service restarted successfully'; else echo '❌ Failed to restart C2 service'; exit 1; fi"
-
-        # clean up /tmp/deploy-staging
+        # 🗑️ Cleanup
         ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "sudo rm -rf /tmp/deploy-staging"
 
-        # Check if the cleanup was successful
-        ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "if [ $? -eq 0 ]; then echo '✅ Cleanup successful'; else echo '❌ Cleanup failed'; exit 1; fi"
-
-        # Clean up SSH key
+        # 🔐 Remove SSH Key
         rm -f c2_key.pem
 
     # SSH Key for C3
@@ -159,28 +151,19 @@ jobs:
         echo "${{ secrets.C3_VM_SSH_KEY }}" > c3_key.pem
         chmod 600 c3_key.pem
 
-        # Create directory on C2
-        # ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "mkdir -p /tmp/deploy-staging"
+        # ✅ Create /tmp/deploy-staging on C3
+        ssh -i c3_key.pem -o StrictHostKeyChecking=no ${{ secrets.C3_VM_USER }}@${{ secrets.C3_VM_HOST }} "mkdir -p /tmp/deploy-staging"
 
-        # Copy JARs to C2
-        scp -i c2_key.pem -o StrictHostKeyChecking=no "${{ github.workspace }}/deploy-staging/"* ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }}:/tmp/deploy-staging/
+        # 📁 Copy JARs to C3
+        scp -i c3_key.pem -o StrictHostKeyChecking=no "${{ github.workspace }}/deploy-staging/"* ${{ secrets.C3_VM_USER }}@${{ secrets.C3_VM_HOST }}:/tmp/deploy-staging/
 
-        # Move JARs to the target directory with sudo
-        ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "sudo mv /tmp/deploy-staging/* /opt/harmony-ap/webapps/ROOT/WEB-INF/lib/ && sudo systemctl restart harmony-ap"
+        # ✅ Move JARs and restart service
+        ssh -i c3_key.pem -o StrictHostKeyChecking=no ${{ secrets.C3_VM_USER }}@${{ secrets.C3_VM_HOST }} "sudo mv /tmp/deploy-staging/* /opt/harmony-ap/webapps/ROOT/WEB-INF/lib/ && sudo systemctl restart harmony-ap"
 
-        # Check if the move was successful
-        ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "if [ $? -eq 0 ]; then echo '✅ JARs moved successfully to C2'; else echo '❌ Failed to move JARs to C2'; exit 1; fi"
+        # 🗑️ Cleanup
+        ssh -i c3_key.pem -o StrictHostKeyChecking=no ${{ secrets.C3_VM_USER }}@${{ secrets.C3_VM_HOST }} "sudo rm -rf /tmp/deploy-staging"
 
-        # Check if the restart was successful
-        ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "if [ $? -eq 0 ]; then echo '✅ C2 service restarted successfully'; else echo '❌ Failed to restart C2 service'; exit 1; fi"
-
-        # clean up /tmp/deploy-staging
-        ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "sudo rm -rf /tmp/deploy-staging"
-
-        # Check if the cleanup was successful
-        ssh -i c2_key.pem -o StrictHostKeyChecking=no ${{ secrets.C2_VM_USER }}@${{ secrets.C2_VM_HOST }} "if [ $? -eq 0 ]; then echo '✅ Cleanup successful'; else echo '❌ Cleanup failed'; exit 1; fi"
-
-        # Clean up SSH key
+        # 🔐 Remove SSH Key
         rm -f c3_key.pem
 
     - name: Notify Build Success
