@@ -110,7 +110,7 @@ jobs:
         chmod 600 ~/.ssh/known_hosts  
 
     # ----------- Transfer Build Artifacts to C2 and C3 ----------- #
-    - name: Copy Build Artifacts to C2 and C3
+    - name: Staging Build Artifactsß
       run: |
         echo "📦 Packaging build artifacts for deployment..."
 
@@ -123,8 +123,6 @@ jobs:
         # Copy harmony-MSH JAR excluding *-sources.jar
         find harmony-access-point/Core/Domibus-MSH/target/ -type f -name "harmony-MSH-*.jar" ! -name "*-sources.jar" -exec cp {} "${{ github.workspace }}/deploy-staging/" \;
 
-        # SSH Key for C2
-    # SSH Key for C2
     - name: Copy JARs to C2
       run: |
         echo "${{ secrets.C2_VM_SSH_KEY }}" > c2_key.pem
@@ -145,7 +143,6 @@ jobs:
         # 🔐 Remove SSH Key
         rm -f c2_key.pem
 
-    # SSH Key for C3
     - name: Copy JARs to C3
       run: |
         echo "${{ secrets.C3_VM_SSH_KEY }}" > c3_key.pem
@@ -166,5 +163,5 @@ jobs:
         # 🔐 Remove SSH Key
         rm -f c3_key.pem
 
-    - name: Notify Build Success
-      run: echo "✅ Build completed successfully. Ready for deployment to C2 and C3."
+    - name: Deployment Success
+      run: echo "✅ Deployment completed successfully."
