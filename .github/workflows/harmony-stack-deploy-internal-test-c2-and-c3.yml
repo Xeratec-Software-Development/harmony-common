@@ -110,7 +110,7 @@ jobs:
         chmod 600 ~/.ssh/known_hosts  
 
     # ----------- Transfer Build Artifacts to C2 and C3 ----------- #
-    - name: Staging Build Artifactsß
+    - name: Staging Build Artifacts
       run: |
         echo "📦 Packaging build artifacts for deployment..."
 
