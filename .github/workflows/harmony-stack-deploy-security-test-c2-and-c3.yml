@@ -9,11 +9,11 @@ on:
       harmony-common-branch:
         description: 'Branch for harmony-common'
         required: true
-        default: 'harmony-xeratec-internal-c2-and-c3'
+        default: 'harmony-xeratec-security-c2-and-c3'
       harmony-access-point-branch:
         description: 'Branch for harmony-access-point'
         required: true
-        default: 'harmony-main-xeratec'  
+        default: 'harmony-main-xeratec'
       harmony-smp-branch:
         description: 'Branch for harmony-smp'
         required: true
